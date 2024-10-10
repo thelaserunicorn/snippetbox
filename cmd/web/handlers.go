@@ -1,48 +1,56 @@
 package main
+
 import (
-  "fmt"
-  "html/template"
-  "log"
-  "net/http"
-  "strconv"
+    "fmt"
+    "html/template"
+    "net/http"
+    "strconv"
 )
 
-func home(w http.ResponseWriter, r *http.Request){
-  w.Header().Add("Server", "GO")
+// Change the signature of the home handler so it is defined as a method against
+// *application.
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
+    w.Header().Add("Server", "Go")
 
-  files := []string{
-    "./ui/html/base.tmpl",
-    "./ui/html/partials/nav.tmpl",
-    "./ui/html/pages/home.tmpl",
-  }
-  ts, err := template.ParseFiles(files...)
-  if err != nil {
-    log.Print(err.Error())
-    http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-    return
-  }
+    files := []string{
+        "./ui/html/base.tmpl",
+        "./ui/html/partials/nav.tmpl",
+        "./ui/html/pages/home.tmpl",
+    }
 
-  err = ts.ExecuteTemplate(w,"base", nil)
-  if err != nil {
-    log.Print(err.Error())
-    http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-  }
+    ts, err := template.ParseFiles(files...)
+    if err != nil {
+    app.serverError(w, r, err) // Use the serverError() helper.
+        return
+    }
+
+    err = ts.ExecuteTemplate(w, "base", nil)
+    if err != nil {
+    app.serverError(w, r, err) // Use the serverError() helper.
+    }
 }
 
-func snippetView(w http.ResponseWriter, r *http.Request) {
-  id, err := strconv.Atoi(r.PathValue("id"))
-  if err != nil || id < 1 {
-    http.NotFound(w, r)
-    return
-  }
-  fmt.Fprintf(w, "SNIPPET %d", id)
+// Change the signature of the snippetView handler so it is defined as a method
+// against *application.
+func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.PathValue("id"))
+    if err != nil || id < 1 {
+        http.NotFound(w, r)
+        return
+    }
+
+    fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
-func snippetCreate(w http.ResponseWriter, r *http.Request){
-  w.Write([]byte("FORM FOR CREATING A SNIPPET"))
+// Change the signature of the snippetCreate handler so it is defined as a method
+// against *application.
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("Display a form for creating a new snippet..."))
 }
 
-func snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-  w.WriteHeader(http.StatusCreated)
-  w.Write([]byte("SAVE A NEW SNIPPET"))
+// Change the signature of the snippetCreatePost handler so it is defined as a method
+// against *application.
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+    w.WriteHeader(http.StatusCreated)
+    w.Write([]byte("Save a new snippet..."))
 }

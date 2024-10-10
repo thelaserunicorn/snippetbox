@@ -1,18 +1,32 @@
 package main
+
 import (
-  "log"
-  "net/http"
+    "flag"
+    "log/slog"
+    "net/http"
+    "os"
 )
 
+type application struct {
+    logger *slog.Logger
+}
 
 func main() {
-  mux := http.NewServeMux()
-  mux.HandleFunc("GET /{$}", home)
-  mux.HandleFunc("GET /snippet/view/{id}/{$}", snippetView)
-  mux.HandleFunc("GET /snippet/create", snippetCreate)
-  mux.HandleFunc("POST /snippet/create", snippetCreatePost)
+    addr := flag.String("addr", ":4000", "HTTP network address")
+    flag.Parse()
 
-  log.Print("STARTING SERVER ON PORT: 4000")
-  err := http.ListenAndServe(":4000", mux)
-  log.Fatal(err)
+    logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+    // Initialize a new instance of our application struct, containing the
+    // dependencies (for now, just the structured logger).
+    app := &application{
+        logger: logger,
+    }
+
+
+    logger.Info("starting server", "addr", *addr)
+    
+    err := http.ListenAndServe(*addr, app.routes())
+    logger.Error(err.Error())
+    os.Exit(1)
 }
