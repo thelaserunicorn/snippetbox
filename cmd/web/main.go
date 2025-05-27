@@ -7,18 +7,11 @@ import (
     "net/http"
     "os"
 
-    // Import the models package that we just created. You need to prefix this with
-    // whatever module path you set up back in chapter 02.01 (Project Setup and Creating
-    // a Module) so that the import statement looks like this:
-    // "{your-module-path}/internal/models". If you can't remember what module path you 
-    // used, you can find it at the top of the go.mod file.
-    "snippetbox.alexedwards.net/internal/models" 
+    "thelaserunicorn.snippetbox/internal/models" 
 
     _ "github.com/go-sql-driver/mysql"
 )
 
-// Add a snippets field to the application struct. This will allow us to
-// use the SnippetModel type in our handlers.
 type application struct {
     logger   *slog.Logger
     snippets *models.SnippetModel
@@ -38,8 +31,6 @@ func main() {
     }
     defer db.Close()
 
-    // Initialize a models.SnippetModel instance containing the connection pool
-    // and add it to the application dependencies.
     app := &application{
         logger:   logger,
         snippets: &models.SnippetModel{DB: db},
@@ -50,4 +41,18 @@ func main() {
     err = http.ListenAndServe(*addr, app.routes())
     logger.Error(err.Error())
     os.Exit(1)
+}
+func openDB(dsn string) (*sql.DB, error) {
+    db, err := sql.Open("mysql", dsn)
+    if err != nil {
+        return nil, err
+    }
+
+    err = db.Ping()
+    if err != nil {
+        db.Close()
+        return nil, err
+    }
+
+    return db, nil
 }
